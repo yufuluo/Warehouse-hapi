@@ -1,14 +1,14 @@
-'use strict';
+"use strict";
 
-const fs = require('fs');
-const path = require('path');
-const hapi = require('hapi');
-const bb = require('bluebird');
-const bodyParser = require('body-parser');
+const fs = require("fs");
+const path = require("path");
+const hapi = require("hapi");
+const bb = require("bluebird");
+const bodyParser = require("body-parser");
 
-const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/test');
-const model = require('./model');
+const mongoose = require("mongoose");
+mongoose.connect("mongodb://localhost:27017/test");
+const model = require("./model");
 const Storage = model(mongoose).Storage;
 
 
@@ -16,25 +16,35 @@ let server = new hapi.Server();
 server.connection({port: 8000});
 
 
-server.register(require('inert'), (err) => {
+server.register(require("inert"), (err) => {
     if (err) {
         throw err;
     }
 
     server.route({
-        method: 'GET',
-        path: '/{param*}',
+        method: "GET",
+        path: "/{param*}",
         handler: {
             directory: {
-                path: path.normalize(__dirname + '/public')
+                path: path.normalize(__dirname + "/client")
+            }
+        }
+    });
+
+    server.route({
+        method: "GET",
+        path: "/js/{param*}",
+        handler: {
+            directory: {
+                path: path.normalize(__dirname + "/dist/js")
             }
         }
     });
 });
 
 server.route({
-    method: 'GET',
-    path: '/storage',
+    method: "GET",
+    path: "/storage",
     handler: (request, reply) => {
         return bb.try(() => Storage.find().lean())
             .then((result) => reply(result))
@@ -42,10 +52,9 @@ server.route({
     }
 });
 
-
 server.route({
-    method: 'POST',
-    path: '/storage',
+    method: "POST",
+    path: "/storage",
     handler: (request, reply) => {
         const data = {
             name: request.payload.name,
@@ -59,16 +68,14 @@ server.route({
 });
 
 server.route({
-    method: 'DELETE',
-    path: '/storage/{id?}',
+    method: "DELETE",
+    path: "/storage/{id?}",
     handler: (request, reply) => {
         const id = request.query.id;
-        return Storage.findByIdAndRemove(id, () => reply('removed'));
+        return Storage.findByIdAndRemove(id, () => reply("removed"));
     }
 });
 
 server.start(() => {
-    console.log('Server running at:', server.info.uri + '/');
+    console.log("Server running at:", server.info.uri + "/");
 });
-
-
